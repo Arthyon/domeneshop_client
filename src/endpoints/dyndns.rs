@@ -1,9 +1,8 @@
 use std::net::IpAddr;
 
-use crate::{
-    client::{DomeneshopClient, DomeneshopError},
-    helpers::map_unhandled_response,
-};
+use http_types::{Method, Request, StatusCode};
+
+use crate::client::{DomeneshopClient, DomeneshopError};
 
 impl DomeneshopClient {
     pub async fn update_dyndns<S>(
@@ -12,23 +11,34 @@ impl DomeneshopClient {
         ip: Option<IpAddr>,
     ) -> Result<(), DomeneshopError>
     where
-        S: Into<String> + serde::Serialize,
+        S: Into<String>,
     {
-        let mut query_parameters: Vec<(&str, String)> = vec![("hostname", hostname.into())];
+        let mut url = self.create_url("/dyndns/update")?;
+        let mut query_parameters = vec![("hostname", hostname.into())];
         if let Some(ip) = ip {
             query_parameters.push(("myip", ip.to_string()));
         }
 
-        let request = self
-            .client
-            .get(self.create_absolute_url("/dyndns/update"))
-            .query(&query_parameters);
+        let query = query_parameters
+            .into_iter()
+            .map(|(name, value)| format!("{}:{}", name, value))
+            .collect::<Vec<_>>()
+            .join("&");
 
-        let result = self.send(request).await?;
+        url.set_query(Some(query.as_str()));
 
-        match result.status() {
-            reqwest::StatusCode::NO_CONTENT => Ok(()),
-            _ => Err(map_unhandled_response(result).await),
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+
+        match response.status() {
+            StatusCode::NoContent => Ok(()),
+            _ => Err(DomeneshopError {
+                help: format!(
+                    "Encountered unexpected response status {}",
+                    response.status()
+                ),
+                code: "UnexpectedStatus".to_string(),
+            }),
         }
     }
 }

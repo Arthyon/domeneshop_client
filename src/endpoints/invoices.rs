@@ -1,10 +1,8 @@
 use chrono::NaiveDate;
+use http_types::{Method, Request};
 use serde::Deserialize;
 
-use crate::{
-    client::{DomeneshopClient, DomeneshopError},
-    helpers::parse_response,
-};
+use crate::client::{DomeneshopClient, DomeneshopError};
 
 pub type InvoiceId = i32;
 
@@ -46,23 +44,26 @@ pub struct Invoice {
 
 impl DomeneshopClient {
     pub async fn list_invoices(&self) -> Result<Vec<Invoice>, DomeneshopError> {
-        let request = self.client.get(self.create_absolute_url("/invoices"));
+        let url = self.create_url("/invoices")?;
 
-        let result = self.send(request).await?;
-        parse_response(result).await
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+
+        self.deserialize_response(response).await
     }
 
     pub async fn list_invoices_with_status(
         &self,
         status: InvoiceStatus,
     ) -> Result<Vec<Invoice>, DomeneshopError> {
-        let request = self
-            .client
-            .get(self.create_absolute_url("/invoices"))
-            .query(&[("status", Self::map_invoice_status(status))]);
+        let mut url = self.create_url("/invoices")?;
+        url.set_query(Some(
+            format!("status={}", Self::map_invoice_status(status)).as_str(),
+        ));
 
-        let result = self.send(request).await?;
-        parse_response(result).await
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+        self.deserialize_response(response).await
     }
 
     fn map_invoice_status(status: InvoiceStatus) -> String {

@@ -1,10 +1,10 @@
+use std::fmt::Display;
+
 use chrono::NaiveDate;
+use http_types::{Method, Request};
 use serde::Deserialize;
 
-use crate::{
-    client::{DomeneshopClient, DomeneshopError},
-    helpers::parse_response,
-};
+use crate::client::{DomeneshopClient, DomeneshopError};
 
 pub type DomainId = i32;
 
@@ -51,42 +51,33 @@ impl DomeneshopClient {
     // Domeneshop returns unauthorized when requesting a non-owned id. Cannot differentiate between credentials-error and this.
     // Should really be Result<Option<Domain>, DomeneShopError>-return value
     pub async fn get_domain(&self, id: DomainId) -> Result<Domain, DomeneshopError> {
-        let request = self
-            .client
-            .get(self.create_absolute_url(format!("/domains/{}", id)));
+        let url = self.create_url(format!("/domains/{}", id))?;
 
-        let result = self.send(request).await?;
-        parse_response(result).await
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+
+        self.deserialize_response(response).await
     }
 
     pub async fn list_domains(&self) -> Result<Vec<Domain>, DomeneshopError> {
-        self.list_domains_internal::<String>(None).await
+        let url = self.create_url("/domains")?;
+
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+
+        self.deserialize_response(response).await
     }
 
-    pub async fn list_domains_with_filter<S>(
+    pub async fn list_domains_with_filter(
         &self,
-        filter: S,
-    ) -> Result<Vec<Domain>, DomeneshopError>
-    where
-        S: Into<String> + serde::Serialize,
-    {
-        self.list_domains_internal(Some(filter)).await
-    }
+        filter: impl Into<String> + Display,
+    ) -> Result<Vec<Domain>, DomeneshopError> {
+        let mut url = self.create_url("/domains")?;
+        url.set_query(Some(format!("domain={}", filter).as_str()));
 
-    async fn list_domains_internal<S>(
-        &self,
-        filter: Option<S>,
-    ) -> Result<Vec<Domain>, DomeneshopError>
-    where
-        S: Into<String> + serde::Serialize,
-    {
-        let mut request = self.client.get(self.create_absolute_url("/domains"));
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
 
-        if let Some(filter) = filter {
-            request = request.query(&[("domain", filter)]);
-        }
-
-        let result = self.send(request).await?;
-        parse_response(result).await
+        self.deserialize_response(response).await
     }
 }
