@@ -3,6 +3,7 @@ use http_types::{Request, Response};
 
 use crate::{client::DomeneshopError, http::HttpClient};
 
+/// A mock client that can be used for testing code using this crate
 pub struct MockClient {}
 
 #[async_trait]

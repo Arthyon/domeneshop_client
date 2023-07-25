@@ -5,6 +5,11 @@ use http_types::{Method, Request, StatusCode};
 use crate::client::{DomeneshopClient, DomeneshopError};
 
 impl DomeneshopClient {
+    /// Update DNS using the "IP update protocol".
+    /// A DNS record for the given hostname will be created if it does not exist, or updated if it does.
+    /// The record type (A or AAAA will automatically be detected).
+    ///
+    /// If `ip` is not provided, the IP of the client making the API request will be used.
     pub async fn update_dyndns<S>(
         &self,
         hostname: S,

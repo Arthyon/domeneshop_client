@@ -7,6 +7,7 @@ use url::Url;
 
 use crate::{error_mapping::map_http_types_error, http::HttpClient};
 
+/// Configuration of the created client
 pub struct DomeneshopClientConfiguration {
     user_agent: Option<String>,
     base_url: Option<String>,
@@ -18,6 +19,7 @@ pub struct DomeneshopClientConfiguration {
 
 #[cfg(feature = "reqwest")]
 impl DomeneshopClientConfiguration {
+    /// Creates a default configuration for the domeneshop client
     pub fn default() -> DomeneshopClientConfiguration {
         DomeneshopClientConfiguration {
             user_agent: None,
@@ -27,12 +29,18 @@ impl DomeneshopClientConfiguration {
     }
 }
 
+/// The error structure returned from the Domeneshop API.
+/// This is also used for all other errors emitted from this crate.
 #[derive(Deserialize, Debug)]
 pub struct DomeneshopError {
+    /// Additional information about the error
     pub help: String,
+    /// A shorter code describing the error
     pub code: String,
 }
 
+/// The client used to interact with the domeneshop API.
+/// TODO Add example
 pub struct DomeneshopClient {
     client: Box<dyn HttpClient>,
     base_url: String,
@@ -49,6 +57,7 @@ const DEFAULT_BASE_URL: &str = "https://api.domeneshop.no/";
 const API_VERSION: &str = "v0";
 
 impl DomeneshopClient {
+    /// Creates a new domeneshop client
     pub fn new(
         token: String,
         secret: String,
