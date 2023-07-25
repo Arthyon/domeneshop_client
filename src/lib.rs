@@ -1,5 +1,4 @@
-#![warn(missing_docs)]
-// #![deny(missing_docs)]
+#![deny(missing_docs)]
 
 //! # domeneshop_client
 //! Rust wrapper for the [Domeneshop API](https://api.domeneshop.no/docs).
@@ -13,6 +12,10 @@
 //! ## Creating the client
 //!
 //! ```rust
+//! # let token = "".to_string();
+//! # let secret = "".to_string();
+//! use domeneshop_client::client::{ DomeneshopClient, DomeneshopClientConfiguration };
+//!
 //! let client = DomeneshopClient::new(token, secret, DomeneshopClientConfiguration::default());
 //! ```
 //!
@@ -26,6 +29,11 @@
 //! (the `default`-function is not present when including this crate without the `reqwest`-feature).
 //!
 //! ```rust
+//! # let token = "".to_string();
+//! # let secret = "".to_string();
+//! # let client = reqwest::Client::new();
+//! # use domeneshop_client::client::{ DomeneshopClient, DomeneshopClientConfiguration };
+//!
 //! let client = DomeneshopClient::new(token, secret, DomeneshopClientConfiguration {
 //!     user_agent: None,
 //!     base_url: None,

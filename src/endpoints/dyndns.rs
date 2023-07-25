@@ -18,19 +18,11 @@ impl DomeneshopClient {
     where
         S: Into<String>,
     {
-        let mut url = self.create_url("/dyndns/update")?;
         let mut query_parameters = vec![("hostname", hostname.into())];
         if let Some(ip) = ip {
             query_parameters.push(("myip", ip.to_string()));
         }
-
-        let query = query_parameters
-            .into_iter()
-            .map(|(name, value)| format!("{}:{}", name, value))
-            .collect::<Vec<_>>()
-            .join("&");
-
-        url.set_query(Some(query.as_str()));
+        let url = self.create_url_with_parameters("/dyndns/update", query_parameters)?;
 
         let request = Request::new(Method::Get, url);
         let response = self.send(request).await?;

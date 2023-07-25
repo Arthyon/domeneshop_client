@@ -1,8 +1,6 @@
-use std::fmt::Display;
-
 use chrono::NaiveDate;
 use http_types::{Method, Request};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::client::{DomeneshopClient, DomeneshopError};
 
@@ -10,7 +8,7 @@ use crate::client::{DomeneshopClient, DomeneshopError};
 pub type DomainId = i32;
 
 /// The status of the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DomainStatus {
     /// The domain is active
@@ -24,7 +22,7 @@ pub enum DomainStatus {
 }
 
 /// The type of web hotel connected to the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum WebhotelType {
     /// No webhotel registered
@@ -40,7 +38,7 @@ pub enum WebhotelType {
 }
 
 /// Information about which domain services that are active for the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct DomainServices {
     /// Domeneshop is registrar for the domain
     pub registrar: bool,
@@ -53,7 +51,7 @@ pub struct DomainServices {
 }
 
 /// The available data of a domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Domain {
     /// Id
     pub id: DomainId,
@@ -103,10 +101,9 @@ impl DomeneshopClient {
     /// Only returns domains containing the text in `filter`.
     pub async fn list_domains_with_filter(
         &self,
-        filter: impl Into<String> + Display,
+        filter: impl AsRef<str>,
     ) -> Result<Vec<Domain>, DomeneshopError> {
-        let mut url = self.create_url("/domains")?;
-        url.set_query(Some(format!("domain={}", filter).as_str()));
+        let url = self.create_url_with_parameters("/domains", &[("domain", filter)])?;
 
         let request = Request::new(Method::Get, url);
         let response = self.send(request).await?;

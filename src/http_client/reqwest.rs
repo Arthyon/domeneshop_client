@@ -3,7 +3,7 @@ use std::fmt::Display;
 use async_trait::async_trait;
 use http_types::{Method, Request, Response, StatusCode};
 
-use crate::{client::DomeneshopError, error_mapping::map_http_types_error, http::HttpClient};
+use crate::{client::DomeneshopError, error_mapping::to_domain_error, http::HttpClient};
 
 #[async_trait]
 impl HttpClient for ::reqwest::Client {
@@ -18,10 +18,7 @@ impl HttpClient for ::reqwest::Client {
         let body = request.take_body();
         if let Some(is_empty) = body.is_empty() {
             if !is_empty {
-                let body_data = body
-                    .into_bytes()
-                    .await
-                    .map_err(|err| map_http_types_error("Failed to set body on request", err))?;
+                let body_data = body.into_bytes().await.map_err(to_domain_error)?;
                 request_builder = request_builder.body(body_data);
             }
         }
@@ -62,8 +59,7 @@ fn map_method(method: Method) -> Result<::reqwest::Method, DomeneshopError> {
 
 fn map_status(status: ::reqwest::StatusCode) -> Result<StatusCode, DomeneshopError> {
     let status = u16::from(status);
-    StatusCode::try_from(status)
-        .map_err(|err| map_http_types_error("Failed to map status code", err))
+    StatusCode::try_from(status).map_err(to_domain_error)
 }
 
 pub fn map_reqwest_error(

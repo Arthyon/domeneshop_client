@@ -83,10 +83,8 @@ impl DomeneshopClient {
         &self,
         status: InvoiceStatus,
     ) -> Result<Vec<Invoice>, DomeneshopError> {
-        let mut url = self.create_url("/invoices")?;
-        url.set_query(Some(
-            format!("status={}", Self::map_invoice_status(status)).as_str(),
-        ));
+        let mapped_status = Self::map_invoice_status(status);
+        let url = self.create_url_with_parameters("/invoices", &[("status", mapped_status)])?;
 
         let request = Request::new(Method::Get, url);
         let response = self.send(request).await?;
