@@ -83,20 +83,32 @@ impl DomeneshopClient {
         &self,
         status: InvoiceStatus,
     ) -> Result<Vec<Invoice>, DomeneshopError> {
-        let mapped_status = Self::map_invoice_status(status);
+        let mapped_status = map_invoice_status(status);
         let url = self.create_url_with_parameters("/invoices", &[("status", mapped_status)])?;
 
         let request = Request::new(Method::Get, url);
         let response = self.send(request).await?;
         self.deserialize_response(response).await
     }
+}
 
-    fn map_invoice_status(status: InvoiceStatus) -> String {
-        let s = match status {
-            InvoiceStatus::Paid => "paid",
-            InvoiceStatus::Settled => "settled",
-            InvoiceStatus::Unpaid => "unpaid",
-        };
-        s.to_string()
+fn map_invoice_status(status: InvoiceStatus) -> String {
+    let s = match status {
+        InvoiceStatus::Paid => "paid",
+        InvoiceStatus::Settled => "settled",
+        InvoiceStatus::Unpaid => "unpaid",
+    };
+    s.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::endpoints::invoices::{map_invoice_status, InvoiceStatus};
+
+    #[test]
+    fn map_invoice_status_maps_correctly() {
+        assert_eq!("paid", map_invoice_status(InvoiceStatus::Paid));
+        assert_eq!("settled", map_invoice_status(InvoiceStatus::Settled));
+        assert_eq!("unpaid", map_invoice_status(InvoiceStatus::Unpaid));
     }
 }

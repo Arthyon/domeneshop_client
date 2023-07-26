@@ -47,3 +47,22 @@ async fn get_domain_formats_url_correctly() {
 
     assert_eq!(3, response.id)
 }
+
+#[tokio::test]
+async fn list_domains_with_filter_adds_correct_query_parameter() {
+    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+        let mut response = Response::new(StatusCode::Ok);
+        let body: Vec<Domain> = Vec::new();
+        set_body(&mut response, body);
+        assert_url_equal(req.url(), "/domains?domain=.no");
+        Ok(response)
+    }
+
+    let mock = MockClient {
+        req_received: receive_request,
+    };
+
+    let client = create_client(mock);
+
+    _ = client.list_domains_with_filter(".no").await.unwrap();
+}
