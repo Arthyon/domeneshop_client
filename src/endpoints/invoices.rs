@@ -1,5 +1,6 @@
+use std::fmt::{self, Display, Formatter};
+
 use chrono::NaiveDate;
-use http_types::{Method, Request};
 use serde::Deserialize;
 
 use crate::client::{DomeneshopClient, DomeneshopError};
@@ -18,6 +19,16 @@ pub enum InvoiceStatus {
     Paid,
     /// A settled creditnote
     Settled,
+}
+
+impl Display for InvoiceStatus {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            InvoiceStatus::Unpaid => write!(f, "unpaid"),
+            InvoiceStatus::Paid => write!(f, "paid"),
+            InvoiceStatus::Settled => write!(f, "settled"),
+        }
+    }
 }
 
 /// Type of invoice
@@ -72,10 +83,7 @@ impl DomeneshopClient {
     pub async fn list_invoices(&self) -> Result<Vec<Invoice>, DomeneshopError> {
         let url = self.create_url("/invoices")?;
 
-        let request = Request::new(Method::Get, url);
-        let response = self.send(request).await?;
-
-        self.deserialize_response(response).await
+        self.get_response(url).await
     }
 
     /// Lists all the invoices for your account, filtered on a specific status
@@ -83,32 +91,21 @@ impl DomeneshopClient {
         &self,
         status: InvoiceStatus,
     ) -> Result<Vec<Invoice>, DomeneshopError> {
-        let mapped_status = map_invoice_status(status);
-        let url = self.create_url_with_parameters("/invoices", &[("status", mapped_status)])?;
+        let url =
+            self.create_url_with_parameters("/invoices", &[("status", status.to_string())])?;
 
-        let request = Request::new(Method::Get, url);
-        let response = self.send(request).await?;
-        self.deserialize_response(response).await
+        self.get_response(url).await
     }
-}
-
-fn map_invoice_status(status: InvoiceStatus) -> String {
-    let s = match status {
-        InvoiceStatus::Paid => "paid",
-        InvoiceStatus::Settled => "settled",
-        InvoiceStatus::Unpaid => "unpaid",
-    };
-    s.to_string()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::endpoints::invoices::{map_invoice_status, InvoiceStatus};
+    use crate::endpoints::invoices::InvoiceStatus;
 
     #[test]
-    fn map_invoice_status_maps_correctly() {
-        assert_eq!("paid", map_invoice_status(InvoiceStatus::Paid));
-        assert_eq!("settled", map_invoice_status(InvoiceStatus::Settled));
-        assert_eq!("unpaid", map_invoice_status(InvoiceStatus::Unpaid));
+    fn invoice_status_displayed_correctly() {
+        assert_eq!("paid", InvoiceStatus::Paid.to_string());
+        assert_eq!("settled", InvoiceStatus::Settled.to_string());
+        assert_eq!("unpaid", InvoiceStatus::Unpaid.to_string());
     }
 }

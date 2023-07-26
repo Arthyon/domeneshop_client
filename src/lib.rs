@@ -73,6 +73,8 @@ pub mod http_client {
 
 /// Modules containing structs for the endpoint groups in the API
 pub mod endpoints {
+    /// Contains dns-related structs
+    pub mod dns;
     /// Contains domain-related structs
     pub mod domains;
     mod dyndns;

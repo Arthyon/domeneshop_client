@@ -1,5 +1,4 @@
 use chrono::NaiveDate;
-use http_types::{Method, Request};
 use serde::{Deserialize, Serialize};
 
 use crate::client::{DomeneshopClient, DomeneshopError};
@@ -81,20 +80,14 @@ impl DomeneshopClient {
     pub async fn get_domain(&self, id: DomainId) -> Result<Domain, DomeneshopError> {
         let url = self.create_url(format!("/domains/{}", id))?;
 
-        let request = Request::new(Method::Get, url);
-        let response = self.send(request).await?;
-
-        self.deserialize_response(response).await
+        self.get_response(url).await
     }
 
     /// Lists all domains for the current user
     pub async fn list_domains(&self) -> Result<Vec<Domain>, DomeneshopError> {
         let url = self.create_url("/domains")?;
 
-        let request = Request::new(Method::Get, url);
-        let response = self.send(request).await?;
-
-        self.deserialize_response(response).await
+        self.get_response(url).await
     }
 
     /// Lists all domain for the current user.
@@ -105,9 +98,6 @@ impl DomeneshopClient {
     ) -> Result<Vec<Domain>, DomeneshopError> {
         let url = self.create_url_with_parameters("/domains", &[("domain", filter)])?;
 
-        let request = Request::new(Method::Get, url);
-        let response = self.send(request).await?;
-
-        self.deserialize_response(response).await
+        self.get_response(url).await
     }
 }

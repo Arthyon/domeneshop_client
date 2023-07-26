@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, fmt::Display};
 
 use base64::{engine::general_purpose, Engine};
-use http_types::{Request, Response};
+use http_types::{Method, Request, Response};
 use serde::{de::DeserializeOwned, Deserialize};
 use url::Url;
 
@@ -152,6 +152,16 @@ impl DomeneshopClient {
         T: DeserializeOwned,
     {
         response.body_json().await.map_err(to_domain_error)
+    }
+
+    pub(crate) async fn get_response<T>(&self, url: Url) -> Result<T, DomeneshopError>
+    where
+        T: DeserializeOwned,
+    {
+        let request = Request::new(Method::Get, url);
+        let response = self.send(request).await?;
+
+        self.deserialize_response(response).await
     }
 }
 
