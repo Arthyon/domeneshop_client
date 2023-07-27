@@ -1,16 +1,16 @@
-use std::fmt::Debug;
-
 use domeneshop_client::{
-    client::{DomeneshopClient, DomeneshopClientConfiguration, API_VERSION},
+    client::{DomeneshopClient, DomeneshopClientConfiguration, DomeneshopError, API_VERSION},
     http_client::mock::MockClient,
 };
 use http_types::Response;
-use serde::Serialize;
 use url::Url;
 
 pub const TEST_BASE_URL: &str = "https://test.local";
 
-pub fn create_client(underlying_client: MockClient) -> DomeneshopClient {
+pub fn create_client<F>(underlying_client: MockClient<F>) -> DomeneshopClient
+where
+    F: std::future::Future<Output = Result<Response, DomeneshopError>> + Send + 'static,
+{
     DomeneshopClient::new(
         String::from("token"),
         String::from("secret"),
@@ -21,14 +21,6 @@ pub fn create_client(underlying_client: MockClient) -> DomeneshopClient {
         },
     )
     .unwrap()
-}
-
-pub fn set_body<T>(response: &mut Response, model: T)
-where
-    T: Serialize + Debug,
-{
-    let json = serde_json::to_string(&model).unwrap();
-    response.set_body(json);
 }
 
 pub fn assert_url_equal(url: &Url, relative_url: &str) {

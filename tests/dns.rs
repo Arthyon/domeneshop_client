@@ -1,7 +1,7 @@
 use domeneshop_client::{
     self,
     client::DomeneshopError,
-    endpoints::dns::{DnsRecord, DnsType},
+    endpoints::dns::{CNAMERecord, DnsRecord, DnsType},
     http_client::mock::MockClient,
 };
 use http_types::{Request, Response, StatusCode};
@@ -11,7 +11,7 @@ mod common;
 
 #[tokio::test]
 async fn list_dns_formats_url_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body("[]");
         assert_url_equal(req.url(), "/domains/3/dns");
@@ -31,7 +31,7 @@ async fn list_dns_formats_url_correctly() {
 
 #[tokio::test]
 async fn list_dns_with_host_filter_formats_url_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body("[]");
         assert_url_equal(req.url(), "/domains/3/dns?host=test");
@@ -52,7 +52,7 @@ async fn list_dns_with_host_filter_formats_url_correctly() {
 
 #[tokio::test]
 async fn list_dns_with_type_filter_formats_url_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body("[]");
         assert_url_equal(req.url(), "/domains/3/dns?type=SRV");
@@ -73,7 +73,7 @@ async fn list_dns_with_type_filter_formats_url_correctly() {
 
 #[tokio::test]
 async fn list_dns_with_both_filters_formats_url_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body("[]");
         assert_url_equal(req.url(), "/domains/3/dns?host=test&type=SRV");
@@ -94,7 +94,7 @@ async fn list_dns_with_both_filters_formats_url_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_a_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"A\", \"data\": \"a\"}]",
@@ -118,7 +118,7 @@ async fn list_dns_deserializes_a_record_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_aaaa_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"AAAA\", \"data\": \"a\"}]",
@@ -142,7 +142,7 @@ async fn list_dns_deserializes_aaaa_record_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_cname_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"CNAME\", \"data\": \"a\"}]",
@@ -166,7 +166,7 @@ async fn list_dns_deserializes_cname_record_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_mx_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"MX\", \"data\": \"a\", \"priority\": 1}]",
@@ -190,7 +190,7 @@ async fn list_dns_deserializes_mx_record_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_srv_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"SRV\", \"data\": \"a\", \"priority\": 1, \"weight\": 1, \"port\": 1}]",
@@ -214,7 +214,7 @@ async fn list_dns_deserializes_srv_record_correctly() {
 
 #[tokio::test]
 async fn list_dns_deserializes_txt_record_correctly() {
-    fn receive_request(_: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
             "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"TXT\", \"data\": \"a\"}]",
@@ -234,4 +234,29 @@ async fn list_dns_deserializes_txt_record_correctly() {
         DnsRecord::TXT(_) => {}
         _ => panic!("Wrong record type"),
     }
+}
+
+#[tokio::test]
+async fn update_dns_serializes_correctly() {
+    async fn receive_request(mut req: Request) -> Result<Response, DomeneshopError> {
+        let json = req.body_string().await.unwrap();
+        let expected = "{\"type\":\"CNAME\",\"id\":1,\"host\":\"t\",\"ttl\":1,\"data\":\"a\"}";
+        assert_eq!(json, expected);
+        Ok(Response::new(StatusCode::Ok))
+    }
+
+    let mock = MockClient {
+        req_received: receive_request,
+    };
+
+    let client = create_client(mock);
+
+    let record = DnsRecord::CNAME(CNAMERecord {
+        data: "a".to_string(),
+        host: "t".to_string(),
+        id: 1,
+        ttl: 1,
+    });
+
+    client.update_dns_record(3, record).await.unwrap();
 }

@@ -1,8 +1,9 @@
 use std::fmt::{self, Display, Formatter};
 
+use http_types::{Method, Request, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use crate::client::{DomeneshopClient, DomeneshopError};
+use crate::client::{set_body, DomeneshopClient, DomeneshopError};
 
 use super::domains::DomainId;
 
@@ -141,6 +142,19 @@ pub struct TXTRecord {
     pub data: String,
 }
 
+impl DnsRecord {
+    fn get_id(&self) -> DnsId {
+        match self {
+            DnsRecord::A(rec) => rec.id,
+            DnsRecord::AAAA(rec) => rec.id,
+            DnsRecord::CNAME(rec) => rec.id,
+            DnsRecord::MX(rec) => rec.id,
+            DnsRecord::SRV(rec) => rec.id,
+            DnsRecord::TXT(rec) => rec.id,
+        }
+    }
+}
+
 impl DomeneshopClient {
     /// Lists all DNS records for a domain
     pub async fn list_dns_records(&self, id: DomainId) -> Result<Vec<DnsRecord>, DomeneshopError> {
@@ -167,5 +181,30 @@ impl DomeneshopClient {
             self.create_url_with_parameters(format!("/domains/{}/dns", id), query_parameters)?;
 
         self.get_response(url).await
+    }
+
+    /// Updates an existing DNS record for the given domain
+    pub async fn update_dns_record(
+        &self,
+        domain_id: DomainId,
+        record: DnsRecord,
+    ) -> Result<(), DomeneshopError> {
+        let dns_id: DnsId = record.get_id();
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+
+        let mut request = Request::new(Method::Post, url);
+        set_body(&mut request, record);
+
+        let response = self.send(request).await?;
+        match response.status() {
+            StatusCode::Ok => Ok(()),
+            _ => Err(DomeneshopError {
+                help: format!(
+                    "Encountered unexpected response status {}",
+                    response.status()
+                ),
+                code: "UnexpectedStatus".to_string(),
+            }),
+        }
     }
 }

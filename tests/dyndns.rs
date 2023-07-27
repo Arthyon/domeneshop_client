@@ -8,7 +8,7 @@ mod common;
 
 #[tokio::test]
 async fn update_dyndns_creates_correct_url() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let response = Response::new(StatusCode::NoContent);
         assert_url_equal(req.url(), "/dyndns/update?hostname=example.com");
         Ok(response)
@@ -25,7 +25,7 @@ async fn update_dyndns_creates_correct_url() {
 
 #[tokio::test]
 async fn update_dyndns_ipv4_address_is_set_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let response = Response::new(StatusCode::NoContent);
         assert_url_equal(
             req.url(),
@@ -49,7 +49,7 @@ async fn update_dyndns_ipv4_address_is_set_correctly() {
 
 #[tokio::test]
 async fn update_dyndns_ipv6_address_is_set_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let response = Response::new(StatusCode::NoContent);
         assert_url_equal(
             req.url(),

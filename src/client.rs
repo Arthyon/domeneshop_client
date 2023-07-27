@@ -2,7 +2,7 @@ use std::{borrow::Borrow, fmt::Display};
 
 use base64::{engine::general_purpose, Engine};
 use http_types::{Method, Request, Response};
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use url::Url;
 
 use crate::{
@@ -18,7 +18,7 @@ pub struct DomeneshopClientConfiguration {
     pub base_url: Option<String>,
     /// Sets an optional underlying client (only with `reqwest` feature enabled)
     #[cfg(feature = "reqwest")]
-    pub underlying_client: Option<Box<dyn HttpClient>>,
+    pub underlying_client: Option<Box<dyn HttpClient + 'static>>,
     /// Sets a required underlying client (only with `reqwest` feature disabled)
     #[cfg(not(feature = "reqwest"))]
     pub underlying_client: Box<dyn HttpClient>,
@@ -213,6 +213,14 @@ fn create_basic_auth_header(token: String, secret: String) -> String {
     format!("Basic {}", encoded)
 }
 
+pub(crate) fn set_body<T>(request: &mut Request, model: T)
+where
+    T: Serialize,
+{
+    let json = serde_json::to_vec(&model).unwrap();
+    request.set_body(json);
+}
+
 #[cfg(test)]
 mod tests {
     use tokio;
@@ -224,7 +232,11 @@ mod tests {
         http_client::mock::MockClient,
     };
 
-    use super::{create_basic_auth_header, DomeneshopClient};
+    use super::{create_basic_auth_header, DomeneshopClient, DomeneshopError};
+
+    async fn return_ok(_: Request) -> Result<Response, DomeneshopError> {
+        Ok(Response::new(StatusCode::Ok))
+    }
 
     #[test]
     fn create_basic_auth_header_creates_valid_header() {
@@ -238,7 +250,7 @@ mod tests {
     #[test]
     fn create_url_creates_valid_absolute_urls() {
         let mock = MockClient {
-            req_received: |_| Ok(Response::new(StatusCode::Ok)),
+            req_received: return_ok,
         };
 
         let client = create_client(mock);
@@ -271,7 +283,7 @@ mod tests {
     #[test]
     fn create_url_with_parameters_creates_valid_absolute_urls() {
         let mock = MockClient {
-            req_received: |_| Ok(Response::new(StatusCode::Ok)),
+            req_received: return_ok,
         };
 
         let client = create_client(mock);
@@ -295,12 +307,13 @@ mod tests {
 
     #[tokio::test]
     async fn send_adds_auth_header() {
+        async fn received(req: Request) -> Result<Response, DomeneshopError> {
+            let val = req.header("Authorization").unwrap();
+            assert_eq!(val, "Basic dG9rZW46c2VjcmV0");
+            Ok(Response::new(StatusCode::Ok))
+        }
         let mock = MockClient {
-            req_received: |req| {
-                let val = req.header("Authorization").unwrap();
-                assert_eq!(val, "Basic dG9rZW46c2VjcmV0");
-                Ok(Response::new(StatusCode::Ok))
-            },
+            req_received: received,
         };
 
         let client = create_client(mock);
@@ -314,12 +327,13 @@ mod tests {
     #[tokio::test]
     async fn send_adds_useragent_header() {
         const USER_AGENT: &str = "testagent";
+        async fn received(req: Request) -> Result<Response, DomeneshopError> {
+            let val = req.header("User-Agent").unwrap();
+            assert_eq!(val, USER_AGENT);
+            Ok(Response::new(StatusCode::Ok))
+        }
         let mock = MockClient {
-            req_received: |req| {
-                let val = req.header("User-Agent").unwrap();
-                assert_eq!(val, USER_AGENT);
-                Ok(Response::new(StatusCode::Ok))
-            },
+            req_received: received,
         };
         let client = DomeneshopClient::new(
             String::from("token"),
@@ -338,7 +352,10 @@ mod tests {
             .unwrap();
     }
 
-    fn create_client(client: MockClient) -> DomeneshopClient {
+    fn create_client<'a, F>(client: MockClient<F>) -> DomeneshopClient
+    where
+        F: std::future::Future<Output = Result<Response, DomeneshopError>> + Send + 'static,
+    {
         DomeneshopClient::new(
             String::from("token"),
             String::from("secret"),

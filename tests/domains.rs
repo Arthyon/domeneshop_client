@@ -1,38 +1,14 @@
-use chrono::Utc;
-use domeneshop_client::{
-    self,
-    client::DomeneshopError,
-    endpoints::domains::{Domain, DomainServices, DomainStatus, WebhotelType},
-    http_client::mock::MockClient,
-};
+use domeneshop_client::{self, client::DomeneshopError, http_client::mock::MockClient};
 use http_types::{Request, Response, StatusCode};
 
-use crate::common::{assert_url_equal, create_client, set_body};
+use crate::common::{assert_url_equal, create_client};
 mod common;
 
 #[tokio::test]
 async fn get_domain_formats_url_correctly() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
-        set_body(
-            &mut response,
-            Domain {
-                domain: String::from("d"),
-                registrant: String::from("d"),
-                expiry_date: Utc::now().naive_utc().into(),
-                id: 3,
-                registered_date: None,
-                renew: false,
-                status: DomainStatus::Active,
-                nameservers: vec!["da".to_string()],
-                services: DomainServices {
-                    registrar: true,
-                    dns: true,
-                    email: false,
-                    webhotel: WebhotelType::None,
-                },
-            },
-        );
+        response.set_body("{ \"domain\": \"d\", \"registrant\": \"d\", \"status\": \"active\", \"expiry_date\": \"2023-04-05\", \"id\": 3, \"renew\": false, \"nameservers\": [], \"services\": { \"registrar\": false, \"dns\": false, \"email\": false, \"webhotel\": \"none\" } }");
         assert_url_equal(req.url(), "/domains/3");
         Ok(response)
     }
@@ -50,10 +26,9 @@ async fn get_domain_formats_url_correctly() {
 
 #[tokio::test]
 async fn list_domains_with_filter_adds_correct_query_parameter() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
-        let body: Vec<Domain> = Vec::new();
-        set_body(&mut response, body);
+        response.set_body("[]");
         assert_url_equal(req.url(), "/domains?domain=.no");
         Ok(response)
     }

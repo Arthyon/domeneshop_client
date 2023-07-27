@@ -6,15 +6,15 @@ use domeneshop_client::{
 };
 use http_types::{Request, Response, StatusCode};
 
-use crate::common::{assert_url_equal, create_client, set_body};
+use crate::common::{assert_url_equal, create_client};
 mod common;
 
 #[tokio::test]
 async fn list_invoices_with_status_adds_correct_query_parameter() {
-    fn receive_request(req: &Request) -> Result<Response, DomeneshopError> {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         let body: Vec<Domain> = Vec::new();
-        set_body(&mut response, body);
+        response.set_body("[]");
         assert_url_equal(req.url(), "/invoices?status=paid");
         Ok(response)
     }
