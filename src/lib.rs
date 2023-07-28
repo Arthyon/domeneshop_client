@@ -73,11 +73,14 @@ pub mod http_client {
 
 /// Modules containing structs for the endpoint groups in the API
 pub mod endpoints {
-    /// Contains dns-related structs
+    /// These endpoints allow you to list, create and delete DNS records for any domain that has active DNS service.
     pub mod dns;
     /// Contains domain-related structs
     pub mod domains;
     mod dyndns;
+    /// These endpoints allow you to list, create and delete HTTP forwards ("WWW forwarding") for any domain that has active DNS service.
+    /// While frame forwards (an `<iframe>` embed) are supported through setting the `frame` field, the use is strongly discouraged. Use DNS records instead.
+    pub mod forwards;
     /// Contains invoice-related structs
     pub mod invoices;
 }
