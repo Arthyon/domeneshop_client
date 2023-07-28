@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::client::{DomeneshopClient, DomeneshopError};
 
