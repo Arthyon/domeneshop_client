@@ -126,19 +126,19 @@ impl DomeneshopClient {
         Url::parse_with_params(url.as_str(), query_parameters).map_err(to_domain_error)
     }
 
-    pub(crate) async fn send(&self, mut req: Request) -> Result<Response, DomeneshopError> {
+    pub(crate) async fn send_no_validation(
+        &self,
+        mut req: Request,
+    ) -> Result<Response, DomeneshopError> {
         req.insert_header("Authorization", &self.auth_header);
         req.insert_header("User-Agent", &self.user_agent);
-        let mut response = self.client.execute_request(req).await?;
+        self.client.execute_request(req).await
+    }
 
+    pub(crate) async fn send(&self, req: Request) -> Result<Response, DomeneshopError> {
+        let response = self.send_no_validation(req).await?;
         if !response.status().is_success() {
-            match response.body_json::<DomeneshopError>().await {
-                Ok(error) => Err(error),
-                Err(err) => Err(to_domain_error_with_context(
-                    "Failed to deserialize error response",
-                    err,
-                )),
-            }
+            Err(handle_response_error(response).await)
         } else {
             Ok(response)
         }
@@ -219,6 +219,13 @@ where
 {
     let json = serde_json::to_vec(&model).unwrap();
     request.set_body(json);
+}
+
+pub(crate) async fn handle_response_error(mut response: Response) -> DomeneshopError {
+    match response.body_json::<DomeneshopError>().await {
+        Ok(error) => error,
+        Err(err) => to_domain_error_with_context("Failed to deserialize error response", err),
+    }
 }
 
 #[cfg(test)]
