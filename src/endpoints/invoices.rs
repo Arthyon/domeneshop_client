@@ -1,9 +1,10 @@
 use std::fmt::{self, Display, Formatter};
 
 use chrono::NaiveDate;
+use http_types::{Method, Request, StatusCode};
 use serde::Deserialize;
 
-use crate::client::{DomeneshopClient, DomeneshopError};
+use crate::client::{handle_response_error, DomeneshopClient, DomeneshopError};
 
 /// Id of an invoice
 pub type InvoiceId = i32;
@@ -79,7 +80,7 @@ pub struct Invoice {
 }
 
 impl DomeneshopClient {
-    /// Lists all the invoices for your account
+    /// List invoices for your account. Only invoices from the past 3 years are returned.
     pub async fn list_invoices(&self) -> Result<Vec<Invoice>, DomeneshopError> {
         let url = self.create_url("/invoices")?;
 
@@ -95,6 +96,26 @@ impl DomeneshopClient {
             self.create_url_with_parameters("/invoices", &[("status", status.to_string())])?;
 
         self.get_response(url).await
+    }
+
+    /// Find invoice by invoice number
+    pub async fn find_invoice_by_id(
+        &self,
+        id: InvoiceId,
+    ) -> Result<Option<Invoice>, DomeneshopError> {
+        let url = self.create_url(format!("/invoices/{}", id))?;
+
+        let request = Request::new(Method::Get, url);
+
+        let response = self.send_no_validation(request).await?;
+        match response.status() {
+            StatusCode::Ok => self
+                .deserialize_response::<Invoice>(response)
+                .await
+                .map(Some),
+            StatusCode::NotFound => Ok(None),
+            _ => Err(handle_response_error(response).await),
+        }
     }
 }
 
