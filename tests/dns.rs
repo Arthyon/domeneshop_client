@@ -4,7 +4,7 @@ use domeneshop_client::{
     endpoints::dns::{CNAMERecordData, DnsRecordData, DnsType, ExistingDnsRecord},
     http_client::mock::MockClient,
 };
-use http_types::{Request, Response, StatusCode};
+use http_types::{Method, Request, Response, StatusCode};
 
 use crate::common::{assert_url_equal, create_client};
 mod common;
@@ -389,4 +389,37 @@ async fn update_dns_serializes_correctly() {
     };
 
     client.update_dns_record(3, record).await.unwrap();
+}
+
+#[tokio::test]
+async fn delete_dns_succeeds() {
+    async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
+        assert_url_equal(req.url(), "/domains/3/dns/5");
+        assert_eq!(req.method(), Method::Delete);
+        Ok(Response::new(StatusCode::NoContent))
+    }
+
+    let mock = MockClient {
+        req_received: receive_request,
+    };
+
+    let client = create_client(mock);
+
+    client.delete_dns_record(3, 5).await.unwrap();
+}
+
+#[tokio::test]
+async fn delete_dns_404_returns_err() {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
+        Ok(Response::new(StatusCode::NotFound))
+    }
+
+    let mock = MockClient {
+        req_received: receive_request,
+    };
+
+    let client = create_client(mock);
+
+    let response = client.delete_dns_record(3, 5).await;
+    assert!(response.is_err());
 }

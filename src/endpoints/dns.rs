@@ -170,6 +170,19 @@ impl DomeneshopClient {
         self.get_response(url).await
     }
 
+    /// Deletes a dns record using the given id
+    pub async fn delete_dns_record(
+        &self,
+        domain_id: DomainId,
+        dns_id: DnsId,
+    ) -> Result<(), DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+
+        let request = Request::new(Method::Delete, url);
+        let response = self.send(request).await;
+        response.map(|_| Ok(()))?
+    }
+
     /// Lists all DNS records for a domain
     pub async fn list_dns_records(
         &self,
