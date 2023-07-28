@@ -1,7 +1,8 @@
 use std::fmt::{self, Debug, Display, Formatter};
 
-use http_types::{Method, Request, StatusCode};
+use http_types::{Method, Request, Response, StatusCode};
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::{
     client::{set_body, DomeneshopClient, DomeneshopError},
@@ -149,7 +150,7 @@ pub struct AddDnsRecordResponse {
     /// Id of the created DNS record
     pub id: DnsId,
     /// Url to the DNS record resource that was created
-    pub url: Option<String>,
+    pub url: Option<Url>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -213,9 +214,7 @@ impl DomeneshopClient {
         let mut response = self.send(request).await?;
         match response.status() {
             StatusCode::Created => {
-                let location = response
-                    .header("Location")
-                    .map(|val| val.last().to_string());
+                let location = parse_location_header(&response);
                 let body = response
                     .body_json::<DomeneshopAddDnsRecordResponse>()
                     .await
@@ -262,5 +261,15 @@ impl DomeneshopClient {
                 code: "UnexpectedStatus".to_string(),
             }),
         }
+    }
+}
+
+fn parse_location_header(response: &Response) -> Option<Url> {
+    match response.header("Location") {
+        None => None,
+        Some(header) => match Url::parse(header.last().as_str()) {
+            Err(_) => None,
+            Ok(url) => Some(url),
+        },
     }
 }

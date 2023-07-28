@@ -311,7 +311,32 @@ async fn add_dns_gets_url_from_location_header() {
     });
 
     let response = client.add_dns_record(3, record).await.unwrap();
-    assert_eq!(response.url.unwrap(), "https://example.com");
+    assert_eq!(response.url.unwrap().to_string(), "https://example.com/");
+}
+
+#[tokio::test]
+async fn add_dns_invalid_url_in_location_header_results_in_none() {
+    async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
+        let mut response = Response::new(StatusCode::Created);
+        response.append_header("Location", "relative/url");
+        response.set_body("{\"id\": 5}");
+        Ok(response)
+    }
+
+    let mock = MockClient {
+        req_received: receive_request,
+    };
+
+    let client = create_client(mock);
+
+    let record = DnsRecordData::CNAME(CNAMERecordData {
+        host: "t".to_string(),
+        ttl: 1,
+        data: "a".to_string(),
+    });
+
+    let response = client.add_dns_record(3, record).await.unwrap();
+    assert!(response.url.is_none())
 }
 
 #[tokio::test]
