@@ -2,12 +2,15 @@ use http_types::{Method, Request, StatusCode};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::client::{handle_response_error, set_body, DomeneshopClient, DomeneshopError};
+use crate::{
+    client::{handle_response_error, set_body, DomeneshopClient},
+    errors::DomeneshopError,
+};
 
 use super::domains::DomainId;
 
 /// A HTTP forward
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct HttpForward {
     /// The subdomain this forward applies to, without the domain part.
     /// For instance, `www` in the context of the `example.com` domain signifies a forward for `www.example.com`.
@@ -79,13 +82,10 @@ impl DomeneshopClient {
         let response = self.send(request).await?;
         match response.status() {
             StatusCode::Created => Ok(()),
-            _ => Err(DomeneshopError {
-                help: format!(
-                    "Encountered unexpected response status {}",
-                    response.status()
-                ),
-                code: "UnexpectedStatus".to_string(),
-            }),
+            _ => Err(DomeneshopError::new(format!(
+                "Encountered unexpected response status {}",
+                response.status()
+            ))),
         }
     }
 
@@ -104,13 +104,10 @@ impl DomeneshopClient {
         let response = self.send(request).await?;
         match response.status() {
             StatusCode::Ok => Ok(()),
-            _ => Err(DomeneshopError {
-                help: format!(
-                    "Encountered unexpected response status {}",
-                    response.status()
-                ),
-                code: "UnexpectedStatus".to_string(),
-            }),
+            _ => Err(DomeneshopError::new(format!(
+                "Encountered unexpected response status {}",
+                response.status()
+            ))),
         }
     }
 }

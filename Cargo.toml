@@ -1,6 +1,9 @@
 [package]
 name = "domeneshop_client"
-description = "Rust wrappers around Domeneshop's API"
+authors = ["Christian Hochlin"]
+description = "Bindings for Domeneshop's API"
+license = "MIT"
+readme = "README.md"
 version = "0.1.0"
 edition = "2021"
 keywords = ["sdk", "domeneshop"]

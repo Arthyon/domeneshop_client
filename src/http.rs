@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use http_types::{Request, Response};
 
-use crate::client::DomeneshopError;
+use crate::errors::DomeneshopError;
 
 #[async_trait]
 /// A trait used to abstract the transport mechanism for sending requests.

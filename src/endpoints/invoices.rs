@@ -2,16 +2,19 @@ use std::fmt::{self, Display, Formatter};
 
 use chrono::NaiveDate;
 use http_types::{Method, Request, StatusCode};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::client::{handle_response_error, DomeneshopClient, DomeneshopError};
+use crate::{
+    client::{handle_response_error, DomeneshopClient},
+    errors::DomeneshopError,
+};
 
 /// Id of an invoice
 pub type InvoiceId = i32;
 
 /// The status an invoice can have.
 /// Settled is only applicable to the InvoiceType [`CreditNote`](InvoiceType::CreditNode)
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum InvoiceStatus {
     /// An unpaid invoice
@@ -33,7 +36,7 @@ impl Display for InvoiceStatus {
 }
 
 /// Type of invoice
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InvoiceType {
     /// A normal invoice
@@ -44,7 +47,7 @@ pub enum InvoiceType {
 }
 
 /// The currency of an invoice
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub enum InvoiceCurrency {
     /// Norwegian krone
     NOK,
@@ -59,7 +62,7 @@ pub enum InvoiceCurrency {
 }
 
 /// The available data of an invoice
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct Invoice {
     /// Id of the invoice
     pub id: InvoiceId,

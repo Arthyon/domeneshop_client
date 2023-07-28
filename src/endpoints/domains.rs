@@ -1,13 +1,13 @@
 use chrono::NaiveDate;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::client::{DomeneshopClient, DomeneshopError};
+use crate::{client::DomeneshopClient, errors::DomeneshopError};
 
 /// Id of a domain
 pub type DomainId = i32;
 
 /// The status of the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DomainStatus {
     /// The domain is active
@@ -21,7 +21,7 @@ pub enum DomainStatus {
 }
 
 /// The type of web hotel connected to the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum WebhotelType {
     /// No webhotel registered
@@ -37,7 +37,7 @@ pub enum WebhotelType {
 }
 
 /// Information about which domain services that are active for the domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct DomainServices {
     /// Domeneshop is registrar for the domain
     pub registrar: bool,
@@ -50,7 +50,7 @@ pub struct DomainServices {
 }
 
 /// The available data of a domain
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct Domain {
     /// Id
     pub id: DomainId,

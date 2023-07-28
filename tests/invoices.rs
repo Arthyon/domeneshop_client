@@ -1,5 +1,5 @@
 use domeneshop_client::{
-    self, client::DomeneshopError, endpoints::invoices::InvoiceStatus,
+    self, endpoints::invoices::InvoiceStatus, errors::DomeneshopError,
     http_client::mock::MockClient,
 };
 use http_types::{Request, Response, StatusCode};

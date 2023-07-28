@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use domeneshop_client::{self, client::DomeneshopError, http_client::mock::MockClient};
+use domeneshop_client::{self, errors::DomeneshopError, http_client::mock::MockClient};
 use http_types::{Request, Response, StatusCode};
 
 use crate::common::{assert_url_equal, create_client};

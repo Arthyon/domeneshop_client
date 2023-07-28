@@ -2,7 +2,7 @@ use std::net::IpAddr;
 
 use http_types::{Method, Request, StatusCode};
 
-use crate::client::{DomeneshopClient, DomeneshopError};
+use crate::{client::DomeneshopClient, errors::DomeneshopError};
 
 impl DomeneshopClient {
     /// Update DNS using the "IP update protocol".
@@ -29,13 +29,10 @@ impl DomeneshopClient {
 
         match response.status() {
             StatusCode::NoContent => Ok(()),
-            _ => Err(DomeneshopError {
-                help: format!(
-                    "Encountered unexpected response status {}",
-                    response.status()
-                ),
-                code: "UnexpectedStatus".to_string(),
-            }),
+            _ => Err(DomeneshopError::new(format!(
+                "Encountered unexpected response status {}",
+                response.status()
+            ))),
         }
     }
 }

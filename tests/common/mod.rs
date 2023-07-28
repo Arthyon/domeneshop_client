@@ -1,5 +1,6 @@
 use domeneshop_client::{
-    client::{DomeneshopClient, DomeneshopClientConfiguration, DomeneshopError, API_VERSION},
+    client::{DomeneshopClient, DomeneshopClientConfiguration, API_VERSION},
+    errors::DomeneshopError,
     http_client::mock::MockClient,
 };
 use http_types::Response;

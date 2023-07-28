@@ -1,8 +1,7 @@
 #![deny(missing_docs)]
 
 //! # domeneshop_client
-//! Rust wrapper for the [Domeneshop API](https://api.domeneshop.no/docs).
-
+//! API bindings for the [Domeneshop API](https://api.domeneshop.no/docs).
 //!
 //!
 //! ## Prerequisites
@@ -11,7 +10,7 @@
 //!
 //! ## Creating the client
 //!
-//! ```rust
+//! ```
 //! # let token = "".to_string();
 //! # let secret = "".to_string();
 //! use domeneshop_client::client::{ DomeneshopClient, DomeneshopClientConfiguration };
@@ -56,10 +55,10 @@
 
 /// Module containing the DomeneshopClient
 pub mod client;
+/// Module for error structs
+pub mod errors;
 /// Module for http-specifics (HttpClient-trait)
 pub mod http;
-
-mod error_mapping;
 
 /// Module containing clients implementing the HttpClient-trait
 pub mod http_client {

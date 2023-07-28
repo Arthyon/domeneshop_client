@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use http_types::{Request, Response};
 
-use crate::{client::DomeneshopError, http::HttpClient};
+use crate::{errors::DomeneshopError, http::HttpClient};
 
 /// A mock client that can be used for testing code using this crate
 pub struct MockClient<F>

@@ -1,7 +1,7 @@
 use domeneshop_client::{
     self,
-    client::DomeneshopError,
     endpoints::dns::{CNAMERecordData, DnsRecordData, DnsType, ExistingDnsRecord},
+    errors::DomeneshopError,
     http_client::mock::MockClient,
 };
 use http_types::{Method, Request, Response, StatusCode};

@@ -5,13 +5,14 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
-    client::{set_body, DomeneshopClient, DomeneshopError},
-    error_mapping::to_domain_error_with_context,
+    client::{set_body, DomeneshopClient},
+    errors::{to_domain_error_with_context, DomeneshopError},
 };
 
 use super::domains::DomainId;
 
 /// Enum representing a type of DNS record
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub enum DnsType {
     /// A-Record
     A,
@@ -44,7 +45,7 @@ impl Display for DnsType {
 type DnsId = i32;
 
 /// Represents an existing record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct ExistingDnsRecord {
     /// ID of DNS record
     pub id: DnsId,
@@ -54,7 +55,7 @@ pub struct ExistingDnsRecord {
 }
 
 /// Represents DNS record data
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum DnsRecordData {
     /// A-Record
@@ -72,7 +73,7 @@ pub enum DnsRecordData {
 }
 
 /// Represents data about an A-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct ARecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -83,7 +84,7 @@ pub struct ARecordData {
 }
 
 /// Represents data about an AAAA-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct AAAARecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -94,7 +95,7 @@ pub struct AAAARecordData {
 }
 
 /// Represents data about a CNAME-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct CNAMERecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -105,7 +106,7 @@ pub struct CNAMERecordData {
 }
 
 /// Represents data about an MX-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct MXRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -118,7 +119,7 @@ pub struct MXRecordData {
 }
 
 /// Represents data about a SRV-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct SRVRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -135,7 +136,7 @@ pub struct SRVRecordData {
 }
 
 /// Represents data about a TXT-record
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct TXTRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
@@ -146,6 +147,7 @@ pub struct TXTRecordData {
 }
 
 /// Response when adding a new DNS record to a domain
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct AddDnsRecordResponse {
     /// Id of the created DNS record
     pub id: DnsId,
@@ -242,13 +244,10 @@ impl DomeneshopClient {
                     url: location,
                 })
             }
-            _ => Err(DomeneshopError {
-                help: format!(
-                    "Encountered unexpected response status {}",
-                    response.status()
-                ),
-                code: "UnexpectedStatus".to_string(),
-            }),
+            _ => Err(DomeneshopError::new(format!(
+                "Encountered unexpected response status {}",
+                response.status()
+            ))),
         }
     }
 
@@ -266,13 +265,10 @@ impl DomeneshopClient {
         let response = self.send(request).await?;
         match response.status() {
             StatusCode::NoContent => Ok(()),
-            _ => Err(DomeneshopError {
-                help: format!(
-                    "Encountered unexpected response status {}",
-                    response.status()
-                ),
-                code: "UnexpectedStatus".to_string(),
-            }),
+            _ => Err(DomeneshopError::new(format!(
+                "Encountered unexpected response status {}",
+                response.status()
+            ))),
         }
     }
 }

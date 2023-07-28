@@ -3,7 +3,7 @@ use std::fmt::Display;
 use async_trait::async_trait;
 use http_types::{Method, Request, Response, StatusCode};
 
-use crate::{client::DomeneshopError, error_mapping::to_domain_error, http::HttpClient};
+use crate::{errors::to_domain_error, errors::DomeneshopError, http::HttpClient};
 
 #[async_trait]
 impl HttpClient for ::reqwest::Client {
@@ -50,10 +50,7 @@ fn map_method(method: Method) -> Result<::reqwest::Method, DomeneshopError> {
         Method::Get => Ok(::reqwest::Method::GET),
         Method::Post => Ok(::reqwest::Method::POST),
         Method::Put => Ok(::reqwest::Method::PUT),
-        _ => Err(DomeneshopError {
-            help: format!("Invalid method: {}", method),
-            code: "InvalidMethod".to_string(),
-        }),
+        _ => Err(DomeneshopError::new(format!("Invalid method: {}", method))),
     }
 }
 
@@ -66,8 +63,5 @@ pub fn map_reqwest_error(
     context: impl Into<String> + Display,
     error: reqwest::Error,
 ) -> DomeneshopError {
-    DomeneshopError {
-        help: format!("{}: {}", context, error),
-        code: "InfrastructureError".to_string(),
-    }
+    DomeneshopError::new(format!("{}: {}", context, error))
 }

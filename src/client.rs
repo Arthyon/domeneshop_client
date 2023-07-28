@@ -1,12 +1,12 @@
-use std::{borrow::Borrow, fmt::Display};
+use std::borrow::Borrow;
 
 use base64::{engine::general_purpose, Engine};
 use http_types::{Method, Request, Response};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use url::Url;
 
 use crate::{
-    error_mapping::{to_domain_error, to_domain_error_with_context},
+    errors::{to_domain_error, to_domain_error_with_context, DomeneshopApiError, DomeneshopError},
     http::HttpClient,
 };
 
@@ -32,27 +32,6 @@ impl DomeneshopClientConfiguration {
             user_agent: None,
             base_url: None,
             underlying_client: None,
-        }
-    }
-}
-
-/// The error structure returned from the Domeneshop API.
-/// This is also used for all other errors emitted from this crate.
-#[derive(Deserialize, Debug, Clone)]
-pub struct DomeneshopError {
-    /// Additional information about the error
-    pub help: String,
-    /// A shorter code describing the error
-    pub code: String,
-}
-
-impl DomeneshopError {
-    pub(crate) const INFRASTRUCTURE: &str = "InfrastructureError";
-
-    pub(crate) fn from(text: impl Display) -> Self {
-        Self {
-            help: text.to_string(),
-            code: DomeneshopError::INFRASTRUCTURE.to_string(),
         }
     }
 }
@@ -222,8 +201,8 @@ where
 }
 
 pub(crate) async fn handle_response_error(mut response: Response) -> DomeneshopError {
-    match response.body_json::<DomeneshopError>().await {
-        Ok(error) => error,
+    match response.body_json::<DomeneshopApiError>().await {
+        Ok(error) => error.into(),
         Err(err) => to_domain_error_with_context("Failed to deserialize error response", err),
     }
 }

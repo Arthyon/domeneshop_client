@@ -1,5 +1,5 @@
 use domeneshop_client::{
-    self, client::DomeneshopError, endpoints::forwards::HttpForward, http_client::mock::MockClient,
+    self, endpoints::forwards::HttpForward, errors::DomeneshopError, http_client::mock::MockClient,
 };
 use http_types::{Method, Request, Response, StatusCode};
 use url::Url;
