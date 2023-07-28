@@ -1,9 +1,12 @@
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 
 use http_types::{Method, Request, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use crate::client::{set_body, DomeneshopClient, DomeneshopError};
+use crate::{
+    client::{set_body, DomeneshopClient, DomeneshopError},
+    error_mapping::to_domain_error_with_context,
+};
 
 use super::domains::DomainId;
 
@@ -38,29 +41,38 @@ impl Display for DnsType {
 
 /// Id of a DNS record
 type DnsId = i32;
-/// Represents a DNS record for a domain
+
+/// Represents an existing record
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ExistingDnsRecord {
+    /// ID of DNS record
+    pub id: DnsId,
+    /// Data about the record
+    #[serde(flatten)]
+    pub data: DnsRecordData,
+}
+
+/// Represents DNS record data
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum DnsRecord {
+pub enum DnsRecordData {
     /// A-Record
-    A(ARecord),
+    A(ARecordData),
     /// AAAA-Record
-    AAAA(AAAARecord),
+    AAAA(AAAARecordData),
     /// CNAME-Record
-    CNAME(CNAMERecord),
+    CNAME(CNAMERecordData),
     /// MX-Record
-    MX(MXRecord),
+    MX(MXRecordData),
     /// SRC-Record
-    SRV(SRVRecord),
+    SRV(SRVRecordData),
     /// TXT-Record
-    TXT(TXTRecord),
+    TXT(TXTRecordData),
 }
 
 /// Represents data about an A-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ARecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct ARecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -71,9 +83,7 @@ pub struct ARecord {
 
 /// Represents data about an AAAA-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AAAARecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct AAAARecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -84,9 +94,7 @@ pub struct AAAARecord {
 
 /// Represents data about a CNAME-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct CNAMERecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct CNAMERecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -97,9 +105,7 @@ pub struct CNAMERecord {
 
 /// Represents data about an MX-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MXRecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct MXRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -112,9 +118,7 @@ pub struct MXRecord {
 
 /// Represents data about a SRV-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SRVRecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct SRVRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -131,9 +135,7 @@ pub struct SRVRecord {
 
 /// Represents data about a TXT-record
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct TXTRecord {
-    /// ID of DNS record
-    pub id: DnsId,
+pub struct TXTRecordData {
     /// The host/subdomain the DNS record applies to
     pub host: String,
     /// TTL of DNS record in seconds. Must be a multiple of 60.
@@ -142,22 +144,36 @@ pub struct TXTRecord {
     pub data: String,
 }
 
-impl DnsRecord {
-    fn get_id(&self) -> DnsId {
-        match self {
-            DnsRecord::A(rec) => rec.id,
-            DnsRecord::AAAA(rec) => rec.id,
-            DnsRecord::CNAME(rec) => rec.id,
-            DnsRecord::MX(rec) => rec.id,
-            DnsRecord::SRV(rec) => rec.id,
-            DnsRecord::TXT(rec) => rec.id,
-        }
-    }
+/// Response when adding a new DNS record to a domain
+pub struct AddDnsRecordResponse {
+    /// Id of the created DNS record
+    pub id: DnsId,
+    /// Url to the DNS record resource that was created
+    pub url: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct DomeneshopAddDnsRecordResponse {
+    pub id: i32,
 }
 
 impl DomeneshopClient {
+    /// Get DNS Record by id
+    pub async fn get_dns_record(
+        &self,
+        domain_id: DomainId,
+        dns_id: DnsId,
+    ) -> Result<ExistingDnsRecord, DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+
+        self.get_response(url).await
+    }
+
     /// Lists all DNS records for a domain
-    pub async fn list_dns_records(&self, id: DomainId) -> Result<Vec<DnsRecord>, DomeneshopError> {
+    pub async fn list_dns_records(
+        &self,
+        id: DomainId,
+    ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
         let url = self.create_url(format!("/domains/{}/dns", id))?;
 
         self.get_response(url).await
@@ -169,7 +185,7 @@ impl DomeneshopClient {
         id: DomainId,
         host_filter: Option<String>,
         type_filter: Option<DnsType>,
-    ) -> Result<Vec<DnsRecord>, DomeneshopError> {
+    ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
         let mut query_parameters = Vec::new();
         if let Some(host) = host_filter {
             query_parameters.push(("host", host));
@@ -183,21 +199,61 @@ impl DomeneshopClient {
         self.get_response(url).await
     }
 
-    /// Updates an existing DNS record for the given domain
-    pub async fn update_dns_record(
+    /// adds a new  DNS record for the given domain
+    pub async fn add_dns_record(
         &self,
         domain_id: DomainId,
-        record: DnsRecord,
-    ) -> Result<(), DomeneshopError> {
-        let dns_id: DnsId = record.get_id();
-        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+        record: DnsRecordData,
+    ) -> Result<AddDnsRecordResponse, DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns", domain_id))?;
 
         let mut request = Request::new(Method::Post, url);
         set_body(&mut request, record);
 
+        let mut response = self.send(request).await?;
+        match response.status() {
+            StatusCode::Created => {
+                let location = response
+                    .header("Location")
+                    .map(|val| val.last().to_string());
+                let body = response
+                    .body_json::<DomeneshopAddDnsRecordResponse>()
+                    .await
+                    .map_err(|err| {
+                        to_domain_error_with_context(
+                            "DNS record created successfully, but could not deserialize response",
+                            err,
+                        )
+                    })?;
+                Ok(AddDnsRecordResponse {
+                    id: body.id,
+                    url: location,
+                })
+            }
+            _ => Err(DomeneshopError {
+                help: format!(
+                    "Encountered unexpected response status {}",
+                    response.status()
+                ),
+                code: "UnexpectedStatus".to_string(),
+            }),
+        }
+    }
+
+    /// Updates an existing DNS record for the given domain
+    pub async fn update_dns_record(
+        &self,
+        domain_id: DomainId,
+        record: ExistingDnsRecord,
+    ) -> Result<(), DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, record.id))?;
+
+        let mut request = Request::new(Method::Put, url);
+        set_body(&mut request, record.data);
+
         let response = self.send(request).await?;
         match response.status() {
-            StatusCode::Ok => Ok(()),
+            StatusCode::NoContent => Ok(()),
             _ => Err(DomeneshopError {
                 help: format!(
                     "Encountered unexpected response status {}",

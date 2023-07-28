@@ -1,7 +1,5 @@
 use domeneshop_client::{
-    self,
-    client::DomeneshopError,
-    endpoints::{domains::Domain, invoices::InvoiceStatus},
+    self, client::DomeneshopError, endpoints::invoices::InvoiceStatus,
     http_client::mock::MockClient,
 };
 use http_types::{Request, Response, StatusCode};
@@ -13,7 +11,6 @@ mod common;
 async fn list_invoices_with_status_adds_correct_query_parameter() {
     async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
-        let body: Vec<Domain> = Vec::new();
         response.set_body("[]");
         assert_url_equal(req.url(), "/invoices?status=paid");
         Ok(response)
