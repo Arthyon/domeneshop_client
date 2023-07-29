@@ -179,9 +179,9 @@ impl DomeneshopClient {
     /// Lists all DNS records for a domain
     pub async fn list_dns_records(
         &self,
-        id: DomainId,
+        domain_id: DomainId,
     ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/dns", id))?;
+        let url = self.create_url(format!("/domains/{}/dns", domain_id))?;
 
         self.get_response(url).await
     }
@@ -189,7 +189,7 @@ impl DomeneshopClient {
     /// Lists filtered subset of DNS records for a domain
     pub async fn list_dns_records_with_filter(
         &self,
-        id: DomainId,
+        domain_id: DomainId,
         host_filter: Option<String>,
         type_filter: Option<DnsType>,
     ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
@@ -200,8 +200,8 @@ impl DomeneshopClient {
         if let Some(dns_type) = type_filter {
             query_parameters.push(("type", dns_type.to_string()));
         }
-        let url =
-            self.create_url_with_parameters(format!("/domains/{}/dns", id), query_parameters)?;
+        let url = self
+            .create_url_with_parameters(format!("/domains/{}/dns", domain_id), query_parameters)?;
 
         self.get_response(url).await
     }
