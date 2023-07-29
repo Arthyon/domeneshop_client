@@ -45,7 +45,7 @@ impl Display for DnsType {
 }
 
 /// Id of a DNS record
-type DnsId = i32;
+pub type DnsId = i32;
 
 /// Represents an existing record
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
