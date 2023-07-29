@@ -5,6 +5,7 @@
 //! # domeneshop_client
 //! API bindings for the [Domeneshop API](https://api.domeneshop.no/docs).
 //!
+//!
 //! ## Prerequisites
 //! To use this crate, you need to generate API-credentials for the Domeneshop API.
 //! See their [Authentication](https://api.domeneshop.no/docs/#section/Authentication)-section for more information.
