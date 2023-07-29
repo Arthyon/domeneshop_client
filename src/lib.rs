@@ -1,5 +1,7 @@
 #![deny(missing_docs)]
-
+// only enables the `doc_cfg` feature when
+// the `docsrs` configuration attribute is defined
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //! # domeneshop_client
 //! API bindings for the [Domeneshop API](https://api.domeneshop.no/docs).
 //!
@@ -50,6 +52,10 @@
 //! If you want to test code using this client, enable the `mock` feature.
 //! This will make a new [`MockClient`](http_client::mock::MockClient) available that can be passed to the client using the `underlying_client` ocnfiguration option.
 //!
+//! # Features
+//! - `reqwest` (default feature): Uses [`reqwest`](reqwest) to perform the requests. Consumers must supply their own implementation of [`HttpClient`](http::HttpClient) if this is disabled.
+//! - `mock`: Adds [`MockClient`](http_client::mock::MockClient) that can be used for testing.
+//!
 //! [reqwest]: https://crates.io/crates/reqwest
 
 /// Module containing the DomeneshopClient
@@ -62,9 +68,11 @@ pub mod http;
 /// Module containing clients implementing the HttpClient-trait
 pub mod http_client {
     #[cfg(feature = "reqwest")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "reqwest")))]
     pub(crate) mod reqwest;
 
     /// Mock-client for testing. Only available when the `mock`-feature is enabled.
+    #[cfg_attr(docsrs, doc(cfg(feature = "mock")))]
     #[cfg(any(feature = "mock"))]
     pub mod mock;
 }
