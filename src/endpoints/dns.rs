@@ -30,14 +30,17 @@ pub enum DnsType {
 
 impl Display for DnsType {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            DnsType::A => write!(f, "A"),
-            DnsType::AAAA => write!(f, "AAAA"),
-            DnsType::CNAME => write!(f, "CNAME"),
-            DnsType::MX => write!(f, "MX"),
-            DnsType::SRV => write!(f, "SRV"),
-            DnsType::TXT => write!(f, "TXT"),
-        }
+        Display::fmt(
+            match self {
+                DnsType::A => "A",
+                DnsType::AAAA => "AAAA",
+                DnsType::CNAME => "CNAME",
+                DnsType::MX => "MX",
+                DnsType::SRV => "SRV",
+                DnsType::TXT => "TXT",
+            },
+            f,
+        )
     }
 }
 
@@ -160,6 +163,7 @@ struct DomeneshopAddDnsRecordResponse {
     pub id: i32,
 }
 
+/// Operations concerning DNS Records
 impl DomeneshopClient {
     /// Get DNS Record by id
     pub async fn get_dns_record(
@@ -170,19 +174,6 @@ impl DomeneshopClient {
         let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
 
         self.get_response(url).await
-    }
-
-    /// Deletes a dns record using the given id
-    pub async fn delete_dns_record(
-        &self,
-        domain_id: DomainId,
-        dns_id: DnsId,
-    ) -> Result<(), DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
-
-        let request = Request::new(Method::Delete, url);
-        let response = self.send(request).await;
-        response.map(|_| Ok(()))?
     }
 
     /// Lists all DNS records for a domain
@@ -270,6 +261,19 @@ impl DomeneshopClient {
                 response.status()
             ))),
         }
+    }
+
+    /// Deletes a dns record using the given id
+    pub async fn delete_dns_record(
+        &self,
+        domain_id: DomainId,
+        dns_id: DnsId,
+    ) -> Result<(), DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+
+        let request = Request::new(Method::Delete, url);
+        let response = self.send(request).await;
+        response.map(|_| Ok(()))?
     }
 }
 

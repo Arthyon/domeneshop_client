@@ -4,6 +4,7 @@ use http_types::{Method, Request, StatusCode};
 
 use crate::{client::DomeneshopClient, errors::DomeneshopError};
 
+/// Operations concerning dynamic DNS
 impl DomeneshopClient {
     /// Update DNS using the "IP update protocol".
     /// A DNS record for the given hostname will be created if it does not exist, or updated if it does.
