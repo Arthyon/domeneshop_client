@@ -16,11 +16,14 @@ pub struct DomeneshopClientConfiguration {
     pub user_agent: Option<String>,
     /// Overrides default base url if set
     pub base_url: Option<String>,
-    /// Sets an optional underlying client (only with `reqwest` feature enabled)
+    /// Sets an optional underlying client.
+    /// Without `reqwest`-feature enabled, this is NOT optional
     #[cfg(feature = "reqwest")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "reqwest")))]
     pub underlying_client: Option<Box<dyn HttpClient + 'static>>,
     /// Sets a required underlying client (only with `reqwest` feature disabled)
     #[cfg(not(feature = "reqwest"))]
+    #[cfg_attr(docsrs, not(doc(cfg(feature = "reqwest"))))]
     pub underlying_client: Box<dyn HttpClient>,
 }
 
