@@ -3,7 +3,6 @@ use http_types::{Request, Response};
 
 use crate::{errors::DomeneshopError, http::HttpClient};
 /// A mock client that can be used for testing code using this crate.
-/// NOTE: This is only available when feature `mock` is enabled.
 ///
 /// # Example
 /// ```

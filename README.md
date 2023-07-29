@@ -24,6 +24,17 @@ use domeneshop_client::client::{ DomeneshopClient, DomeneshopClientConfiguration
 let client = DomeneshopClient::new(token, secret, DomeneshopClientConfiguration::default());
 ```
 
+## Development
+
+This section contains notes regarding development of the crate.
+
+### Preview documentation using nightly rust
+
+This can be useful, as docs.rs uses the nightly version and can e.g. label documentation for features.
+`RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features`
+
+[Link](https://stackoverflow.com/a/61417700)
+
 ## Disclaimer
 
 I am not a professional rust-developer, so this crate may contain non-idiomatic and inefficient code.
