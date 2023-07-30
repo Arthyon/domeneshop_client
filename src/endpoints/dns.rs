@@ -118,7 +118,7 @@ pub struct MXRecordData {
     /// The target MX host.    
     pub data: String,
     /// MX record priority, also known as preference. Lower values are usually preferred first, but this is not guaranteed
-    pub priority: i16,
+    pub priority: String,
 }
 
 /// Represents data about a SRV-record
@@ -131,11 +131,11 @@ pub struct SRVRecordData {
     /// The target hostname
     pub data: String,
     /// SRV record priority, also known as preference. Lower values are usually preferred first
-    pub priority: i16,
+    pub priority: String,
     /// SRV record weight. Relevant if multiple records have same preference
-    pub weight: i16,
+    pub weight: String,
     /// SRV record port. The port where the service is found.
-    pub port: i16,
+    pub port: String,
 }
 
 /// Represents data about a TXT-record

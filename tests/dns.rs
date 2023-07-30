@@ -193,7 +193,7 @@ async fn list_dns_deserializes_mx_record_correctly() {
     async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
-            "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"MX\", \"data\": \"a\", \"priority\": 1}]",
+            "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"MX\", \"data\": \"a\", \"priority\": \"1\"}]",
         );
         Ok(response)
     }
@@ -217,7 +217,7 @@ async fn list_dns_deserializes_srv_record_correctly() {
     async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let mut response = Response::new(StatusCode::Ok);
         response.set_body(
-            "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"SRV\", \"data\": \"a\", \"priority\": 1, \"weight\": 1, \"port\": 1}]",
+            "[{\"id\": 1, \"host\":\"t\", \"ttl\": 1, \"type\": \"SRV\", \"data\": \"a\", \"priority\": \"1\", \"weight\": \"1\", \"port\": \"1\"}]",
         );
         Ok(response)
     }
