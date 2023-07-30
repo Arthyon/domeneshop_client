@@ -30,19 +30,22 @@ pub enum DnsType {
 
 impl Display for DnsType {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            DnsType::A => write!(f, "A"),
-            DnsType::AAAA => write!(f, "AAAA"),
-            DnsType::CNAME => write!(f, "CNAME"),
-            DnsType::MX => write!(f, "MX"),
-            DnsType::SRV => write!(f, "SRV"),
-            DnsType::TXT => write!(f, "TXT"),
-        }
+        Display::fmt(
+            match self {
+                DnsType::A => "A",
+                DnsType::AAAA => "AAAA",
+                DnsType::CNAME => "CNAME",
+                DnsType::MX => "MX",
+                DnsType::SRV => "SRV",
+                DnsType::TXT => "TXT",
+            },
+            f,
+        )
     }
 }
 
 /// Id of a DNS record
-type DnsId = i32;
+pub type DnsId = i32;
 
 /// Represents an existing record
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
@@ -160,6 +163,7 @@ struct DomeneshopAddDnsRecordResponse {
     pub id: i32,
 }
 
+/// Operations concerning DNS Records
 impl DomeneshopClient {
     /// Get DNS Record by id
     pub async fn get_dns_record(
@@ -172,25 +176,12 @@ impl DomeneshopClient {
         self.get_response(url).await
     }
 
-    /// Deletes a dns record using the given id
-    pub async fn delete_dns_record(
-        &self,
-        domain_id: DomainId,
-        dns_id: DnsId,
-    ) -> Result<(), DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
-
-        let request = Request::new(Method::Delete, url);
-        let response = self.send(request).await;
-        response.map(|_| Ok(()))?
-    }
-
     /// Lists all DNS records for a domain
     pub async fn list_dns_records(
         &self,
-        id: DomainId,
+        domain_id: DomainId,
     ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/dns", id))?;
+        let url = self.create_url(format!("/domains/{}/dns", domain_id))?;
 
         self.get_response(url).await
     }
@@ -198,7 +189,7 @@ impl DomeneshopClient {
     /// Lists filtered subset of DNS records for a domain
     pub async fn list_dns_records_with_filter(
         &self,
-        id: DomainId,
+        domain_id: DomainId,
         host_filter: Option<String>,
         type_filter: Option<DnsType>,
     ) -> Result<Vec<ExistingDnsRecord>, DomeneshopError> {
@@ -209,8 +200,8 @@ impl DomeneshopClient {
         if let Some(dns_type) = type_filter {
             query_parameters.push(("type", dns_type.to_string()));
         }
-        let url =
-            self.create_url_with_parameters(format!("/domains/{}/dns", id), query_parameters)?;
+        let url = self
+            .create_url_with_parameters(format!("/domains/{}/dns", domain_id), query_parameters)?;
 
         self.get_response(url).await
     }
@@ -270,6 +261,19 @@ impl DomeneshopClient {
                 response.status()
             ))),
         }
+    }
+
+    /// Deletes a dns record using the given id
+    pub async fn delete_dns_record(
+        &self,
+        domain_id: DomainId,
+        dns_id: DnsId,
+    ) -> Result<(), DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/dns/{}", domain_id, dns_id))?;
+
+        let request = Request::new(Method::Delete, url);
+        let response = self.send(request).await;
+        response.map(|_| Ok(()))?
     }
 }
 

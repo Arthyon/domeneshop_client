@@ -21,33 +21,12 @@ pub struct HttpForward {
     pub url: Url,
 }
 
+/// Operations concerning HTTP Forwards
 impl DomeneshopClient {
-    /// List all forwards for the specified domain.
-    pub async fn list_forwards(&self, id: DomainId) -> Result<Vec<HttpForward>, DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/forwards", id))?;
-
-        self.get_response(url).await
-    }
-
-    /// Deletes forward by host
-    /// Example `www`.
-    /// Subdomain for the forward, `@` for the root domain
-    pub async fn delete_forward(
-        &self,
-        domain_id: DomainId,
-        host: String,
-    ) -> Result<(), DomeneshopError> {
-        let url = self.create_url(format!("/domains/{}/forwards/{}", domain_id, host))?;
-
-        let request = Request::new(Method::Delete, url);
-        let response = self.send(request).await;
-        response.map(|_| Ok(()))?
-    }
-
-    /// Attempts to find an existing forward by host.
+    /// Attempts to get an existing forward by host.
     /// Example: `www`
     /// Subdomain of the forward, `@` for the root domain
-    pub async fn find_forward_by_host(
+    pub async fn get_forward(
         &self,
         id: DomainId,
         host: String,
@@ -65,6 +44,13 @@ impl DomeneshopClient {
             StatusCode::NotFound => Ok(None),
             _ => Err(handle_response_error(response).await),
         }
+    }
+
+    /// List all forwards for the specified domain.
+    pub async fn list_forwards(&self, id: DomainId) -> Result<Vec<HttpForward>, DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/forwards", id))?;
+
+        self.get_response(url).await
     }
 
     /// Create a forwarding for the specified domain, to a given URL.
@@ -109,5 +95,20 @@ impl DomeneshopClient {
                 response.status()
             ))),
         }
+    }
+
+    /// Deletes forward by host
+    /// Example `www`.
+    /// Subdomain for the forward, `@` for the root domain
+    pub async fn delete_forward(
+        &self,
+        domain_id: DomainId,
+        host: String,
+    ) -> Result<(), DomeneshopError> {
+        let url = self.create_url(format!("/domains/{}/forwards/{}", domain_id, host))?;
+
+        let request = Request::new(Method::Delete, url);
+        let response = self.send(request).await;
+        response.map(|_| Ok(()))?
     }
 }

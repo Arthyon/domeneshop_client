@@ -28,10 +28,11 @@ pub enum InvoiceStatus {
 impl Display for InvoiceStatus {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            InvoiceStatus::Unpaid => write!(f, "unpaid"),
-            InvoiceStatus::Paid => write!(f, "paid"),
-            InvoiceStatus::Settled => write!(f, "settled"),
+            InvoiceStatus::Unpaid => "Unpaid",
+            InvoiceStatus::Paid => "Paid",
+            InvoiceStatus::Settled => "Settled",
         }
+        .fmt(f)
     }
 }
 
@@ -44,6 +45,16 @@ pub enum InvoiceType {
     /// A credit note
     /// *NOTE*: It is unclear if the name is a typo in the docs. This may crash.
     CreditNode,
+}
+
+impl Display for InvoiceType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            InvoiceType::Invoice => "Invoice",
+            InvoiceType::CreditNode => "Credit Note",
+        }
+        .fmt(f)
+    }
 }
 
 /// The currency of an invoice
@@ -61,6 +72,19 @@ pub enum InvoiceCurrency {
     USD,
 }
 
+impl Display for InvoiceCurrency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            InvoiceCurrency::DKK => "DKK",
+            InvoiceCurrency::GBP => "GBP",
+            InvoiceCurrency::NOK => "NOK",
+            InvoiceCurrency::SEK => "SEK",
+            InvoiceCurrency::USD => "USD",
+        }
+        .fmt(f)
+    }
+}
+
 /// The available data of an invoice
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 pub struct Invoice {
@@ -70,6 +94,8 @@ pub struct Invoice {
     pub r#type: InvoiceType,
     /// Amount
     pub amount: i32,
+    /// Currency
+    pub currency: InvoiceCurrency,
     /// Due date
     pub due_date: Option<NaiveDate>,
     /// Issued date
@@ -82,30 +108,10 @@ pub struct Invoice {
     pub url: String,
 }
 
+/// Operations concerning invoices
 impl DomeneshopClient {
-    /// List invoices for your account. Only invoices from the past 3 years are returned.
-    pub async fn list_invoices(&self) -> Result<Vec<Invoice>, DomeneshopError> {
-        let url = self.create_url("/invoices")?;
-
-        self.get_response(url).await
-    }
-
-    /// Lists all the invoices for your account, filtered on a specific status
-    pub async fn list_invoices_with_status(
-        &self,
-        status: InvoiceStatus,
-    ) -> Result<Vec<Invoice>, DomeneshopError> {
-        let url =
-            self.create_url_with_parameters("/invoices", &[("status", status.to_string())])?;
-
-        self.get_response(url).await
-    }
-
-    /// Find invoice by invoice number
-    pub async fn find_invoice_by_id(
-        &self,
-        id: InvoiceId,
-    ) -> Result<Option<Invoice>, DomeneshopError> {
+    /// Get invoice by invoice number
+    pub async fn get_invoice(&self, id: InvoiceId) -> Result<Option<Invoice>, DomeneshopError> {
         let url = self.create_url(format!("/invoices/{}", id))?;
 
         let request = Request::new(Method::Get, url);
@@ -120,16 +126,44 @@ impl DomeneshopClient {
             _ => Err(handle_response_error(response).await),
         }
     }
+
+    /// List invoices for your account. Only invoices from the past 3 years are returned.
+    pub async fn list_invoices(&self) -> Result<Vec<Invoice>, DomeneshopError> {
+        let url = self.create_url("/invoices")?;
+
+        self.get_response(url).await
+    }
+
+    /// Lists all the invoices for your account, filtered on a specific status
+    pub async fn list_invoices_with_status(
+        &self,
+        status: InvoiceStatus,
+    ) -> Result<Vec<Invoice>, DomeneshopError> {
+        let url = self.create_url_with_parameters(
+            "/invoices",
+            &[("status", to_status_query_param(&status))],
+        )?;
+
+        self.get_response(url).await
+    }
+}
+
+fn to_status_query_param(status: &InvoiceStatus) -> &str {
+    match status {
+        InvoiceStatus::Unpaid => "unpaid",
+        InvoiceStatus::Paid => "paid",
+        InvoiceStatus::Settled => "settled",
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::endpoints::invoices::InvoiceStatus;
+    use crate::endpoints::invoices::{to_status_query_param, InvoiceStatus};
 
     #[test]
     fn invoice_status_displayed_correctly() {
-        assert_eq!("paid", InvoiceStatus::Paid.to_string());
-        assert_eq!("settled", InvoiceStatus::Settled.to_string());
-        assert_eq!("unpaid", InvoiceStatus::Unpaid.to_string());
+        assert_eq!("paid", to_status_query_param(&InvoiceStatus::Paid));
+        assert_eq!("settled", to_status_query_param(&InvoiceStatus::Settled));
+        assert_eq!("unpaid", to_status_query_param(&InvoiceStatus::Unpaid));
     }
 }

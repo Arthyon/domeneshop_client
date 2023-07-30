@@ -8,7 +8,7 @@ use crate::common::{assert_url_equal, create_client};
 mod common;
 
 #[tokio::test]
-async fn find_forward_deserializes_correctly() {
+async fn get_forward_deserializes_correctly() {
     async fn receive_request(req: Request) -> Result<Response, DomeneshopError> {
         assert_url_equal(req.url(), "/domains/3/forwards/www");
         let mut response = Response::new(StatusCode::Ok);
@@ -22,16 +22,13 @@ async fn find_forward_deserializes_correctly() {
 
     let client = create_client(mock);
 
-    let response = client
-        .find_forward_by_host(3, "www".to_string())
-        .await
-        .unwrap();
+    let response = client.get_forward(3, "www".to_string()).await.unwrap();
 
     assert!(response.is_some());
 }
 
 #[tokio::test]
-async fn find_forward_404_returns_none() {
+async fn get_forward_404_returns_none() {
     async fn receive_request(_: Request) -> Result<Response, DomeneshopError> {
         let response = Response::new(StatusCode::NotFound);
         Ok(response)
@@ -43,10 +40,7 @@ async fn find_forward_404_returns_none() {
 
     let client = create_client(mock);
 
-    let response = client
-        .find_forward_by_host(3, "www".to_string())
-        .await
-        .unwrap();
+    let response = client.get_forward(3, "www".to_string()).await.unwrap();
 
     assert!(response.is_none());
 }

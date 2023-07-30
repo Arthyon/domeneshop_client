@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +22,18 @@ pub enum DomainStatus {
     PendingDeleteRestorable,
 }
 
+impl Display for DomainStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DomainStatus::Active => "Active",
+            DomainStatus::Expired => "Expired",
+            DomainStatus::Deactivated => "Deactivated",
+            DomainStatus::PendingDeleteRestorable => "Pending delete, restorable",
+        }
+        .fmt(f)
+    }
+}
+
 /// The type of web hotel connected to the domain
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,6 +48,19 @@ pub enum WebhotelType {
     WebLarge,
     /// Extra large
     WebXLarge,
+}
+
+impl Display for WebhotelType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WebhotelType::None => "None",
+            WebhotelType::WebSmall => "Starter",
+            WebhotelType::WebMedium => "Medium",
+            WebhotelType::WebLarge => "Large",
+            WebhotelType::WebXLarge => "Extra Large",
+        }
+        .fmt(f)
+    }
 }
 
 /// Information about which domain services that are active for the domain
@@ -72,6 +99,7 @@ pub struct Domain {
     pub services: DomainServices,
 }
 
+/// Operations concerning domains
 impl DomeneshopClient {
     /// Gets a single domain by id
     ///
