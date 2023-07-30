@@ -158,12 +158,12 @@ fn to_status_query_param(status: &InvoiceStatus) -> &str {
 
 #[cfg(test)]
 mod tests {
-    use crate::endpoints::invoices::InvoiceStatus;
+    use crate::endpoints::invoices::{to_status_query_param, InvoiceStatus};
 
     #[test]
     fn invoice_status_displayed_correctly() {
-        assert_eq!("paid", InvoiceStatus::Paid.to_string());
-        assert_eq!("settled", InvoiceStatus::Settled.to_string());
-        assert_eq!("unpaid", InvoiceStatus::Unpaid.to_string());
+        assert_eq!("paid", to_status_query_param(&InvoiceStatus::Paid));
+        assert_eq!("settled", to_status_query_param(&InvoiceStatus::Settled));
+        assert_eq!("unpaid", to_status_query_param(&InvoiceStatus::Unpaid));
     }
 }
